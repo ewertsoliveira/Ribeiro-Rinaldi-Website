@@ -3818,22 +3818,33 @@
         });
       });
 
+      // Reveal no Scroll dos cards e painéis via IntersectionObserver (imune a offsets ou compensações duplicadas de pin)
       const revealTargets = gsap.utils.toArray('.about-bio-card, .pillar-card, .step-card, .faq-item, .cta-final-box, .command-nav-item, .command-showcase-panel, .accordion-panel');
       revealTargets.forEach(el => {
-        gsap.from(el, {
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 92%',
-            toggleActions: 'play none none none'
-          },
-          opacity: 0,
-          y: 28,
-          duration: 0.75,
-          ease: 'cubic-bezier(0.16, 1, 0.3, 1)'
-        });
+        gsap.set(el, { opacity: 0, y: 28 });
       });
 
-      // Recalcula milimetricamente todos os gatilhos (ScrollTrigger) após carregamento completo de fontes e imagens
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            gsap.to(entry.target, {
+              opacity: 1,
+              y: 0,
+              duration: 0.75,
+              ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              overwrite: 'auto'
+            });
+            observer.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.05,
+        rootMargin: '0px 0px -20px 0px'
+      });
+
+      revealTargets.forEach(el => revealObserver.observe(el));
+
+      // Recalcula os gatilhos da Hero e Parallax após carregamento completo de fontes e imagens
       window.addEventListener('load', () => {
         ScrollTrigger.refresh();
       });
@@ -3900,48 +3911,51 @@
           }
         });
 
-        // 2. Aparição sequencial e suave de cada passo (Card + Ponto R.E.A.L.)
+        // 2. Aparição sequencial e suave de cada passo (Card + Ponto R.E.A.L.) via IntersectionObserver
         const journeySteps = gsap.utils.toArray('.journey-step');
-        journeySteps.forEach((step, i) => {
+        journeySteps.forEach(step => {
+          gsap.set(step, { opacity: 0, y: 50 });
           const dot = step.querySelector('.journey-dot');
-          const card = step.querySelector('.journey-card');
-
-          gsap.fromTo(step, 
-            { opacity: 0, y: 50 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 0.8,
-              ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
-              scrollTrigger: {
-                trigger: step,
-                start: 'top 85%',
-                toggleActions: 'play none none none'
-              }
-            }
-          );
-
-          if (dot) {
-            gsap.fromTo(dot,
-              { scale: 0.4, backgroundColor: 'var(--rr-panel)' },
-              {
-                scale: 1.2,
-                backgroundColor: 'var(--rr-orange)',
-                color: '#000000',
-                duration: 0.45,
-                ease: 'back.out(2)',
-                scrollTrigger: {
-                  trigger: step,
-                  start: 'top 82%',
-                  toggleActions: 'play none none none'
-                },
-                onComplete: () => {
-                  gsap.to(dot, { scale: 1, backgroundColor: 'var(--rr-panel)', color: 'var(--rr-orange)', duration: 0.6, delay: 0.2 });
-                }
-              }
-            );
-          }
+          if (dot) gsap.set(dot, { scale: 0.4, backgroundColor: 'var(--rr-panel)' });
         });
+
+        const journeyObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const step = entry.target;
+              const dot = step.querySelector('.journey-dot');
+
+              gsap.to(step, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                overwrite: 'auto'
+              });
+
+              if (dot) {
+                gsap.to(dot, {
+                  scale: 1.2,
+                  backgroundColor: 'var(--rr-orange)',
+                  color: '#000000',
+                  duration: 0.45,
+                  ease: 'back.out(2)',
+                  overwrite: 'auto',
+                  onComplete: () => {
+                    gsap.to(dot, { scale: 1, backgroundColor: 'var(--rr-panel)', color: 'var(--rr-orange)', duration: 0.6, delay: 0.2 });
+                  }
+                });
+              }
+
+              observer.unobserve(step);
+            }
+          });
+        }, {
+          threshold: 0.08,
+          rootMargin: '0px 0px -30px 0px'
+        });
+
+        journeySteps.forEach(step => journeyObserver.observe(step));
       }
     })();
   </script>
