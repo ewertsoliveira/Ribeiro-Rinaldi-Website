@@ -3677,9 +3677,10 @@
         
         const arrayIndex = i - frameStart;
         img.onload = () => {
-          // Assim que o primeiro quadro (índice 0) carrega, desenha imediatamente
+          // Assim que o primeiro quadro (índice 0) carrega, desenha imediatamente e recalcula posições exatas dos gatilhos
           if (arrayIndex === 0) {
             renderFrame(0);
+            ScrollTrigger.refresh();
           }
         };
         images.push(img);
@@ -3747,16 +3748,6 @@
 
         // 3. O container do vídeo permanece perfeitamente estável (y: 0, scale: 1) durante o Hero
         gsap.set('.hero-bg-video-container', { y: 0, scale: 1, opacity: 1 });
-
-        // 4. Parallax antecipado no Mobile (<1025px): A próxima seção começa a subir antes de a animação terminar
-        if (window.innerWidth < 1025) {
-          if (progress > 0.72) {
-            const riseP = (progress - 0.72) / 0.28;
-            gsap.set('.post-hero-spacer, .post-hero-spacer ~ *', { y: -260 * riseP });
-          } else {
-            gsap.set('.post-hero-spacer, .post-hero-spacer ~ *', { y: 0 });
-          }
-        }
       }
 
       gsap.ticker.add((time, deltaTime) => {
@@ -3773,12 +3764,12 @@
         }
       });
 
-      // ScrollTrigger do Hero: Scrubbing ágil com repasse para o Motor de Cadência Máxima
+      // ScrollTrigger do Hero: Scrubbing ágil com repasse para o Motor de Cadência Máxima e duração nativa no mobile
       ScrollTrigger.create({
         trigger: '#heroPinArea',
         pin: true,
         start: 'top top',
-        end: '+=190%',
+        end: window.innerWidth < 1025 ? '+=135%' : '+=190%',
         scrub: true,
         onUpdate: (self) => {
           targetHeroProgress = self.progress;
@@ -3832,7 +3823,7 @@
         gsap.from(el, {
           scrollTrigger: {
             trigger: el,
-            start: 'top 88%',
+            start: 'top 92%',
             toggleActions: 'play none none none'
           },
           opacity: 0,
@@ -3841,6 +3832,14 @@
           ease: 'cubic-bezier(0.16, 1, 0.3, 1)'
         });
       });
+
+      // Recalcula milimetricamente todos os gatilhos (ScrollTrigger) após carregamento completo de fontes e imagens
+      window.addEventListener('load', () => {
+        ScrollTrigger.refresh();
+      });
+      setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 600);
 
       // Lógica Desktop: Abordagem 3 (Tabela de Comando)
       const commandItems = document.querySelectorAll('.command-nav-item');
