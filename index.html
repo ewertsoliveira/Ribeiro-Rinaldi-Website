@@ -3685,83 +3685,103 @@
         images.push(img);
       }
 
-      // ScrollTrigger do Hero: Scrubbing ágil de quadros + Sumiço de Textos + Parallax Antecipado
+      // Motor de Limite de Cadência Máxima (Speed-Clamped Progress Engine)
+      let targetHeroProgress = 0;
+      let currentHeroProgress = 0;
+
+      function updateHeroScene(progress) {
+        // 1. Scrub de quadros no canvas — zero delay de decodificação de vídeo
+        if (images.length > 0) {
+          const frameIndex = Math.min(images.length - 1, Math.floor(progress * images.length));
+          renderFrame(frameIndex);
+        }
+
+        // 2. Efeito de sumir os textos e botões
+        // No Desktop: só começam a sumir no quadro onde a caneta toca o papel e assina o Termo de Posse (quadro 160, progress 0.625)
+        // No Mobile: a copy some logo no início da rolagem (progress 0.10 a 0.26) para revelar o documento "Concurso Público" antes da transição para o "Termo de Posse"
+        let fadeProgress = 0;
+        if (window.innerWidth >= 1025) {
+          fadeProgress = progress <= 0.625 ? 0 : Math.min(1, (progress - 0.625) / 0.25);
+        } else {
+          fadeProgress = progress <= 0.10 ? 0 : Math.min(1, (progress - 0.10) / 0.16);
+        }
+        
+        gsap.to('.hero-content-box', {
+          opacity: 1 - fadeProgress,
+          y: -50 * fadeProgress,
+          scale: 1 - 0.03 * fadeProgress,
+          duration: 0.15,
+          overwrite: 'auto'
+        });
+
+        gsap.to('.navbar', {
+          opacity: 1 - fadeProgress * 1.3,
+          y: -25 * fadeProgress,
+          duration: 0.15,
+          overwrite: 'auto'
+        });
+
+        gsap.to('.hero-ambient-glow', {
+          opacity: 1 - fadeProgress,
+          scale: 1 + 0.15 * fadeProgress,
+          duration: 0.15,
+          overwrite: 'auto'
+        });
+
+        // No mobile (<900px), o overlay escuro some em sincronia com o sumiço da copy
+        if (window.innerWidth <= 900) {
+          gsap.to('.hero-bg-overlay', {
+            opacity: 0.94 * (1 - fadeProgress),
+            duration: 0.15,
+            overwrite: 'auto'
+          });
+        } else {
+          gsap.to('.hero-bg-overlay', { opacity: 0, duration: 0.15, overwrite: 'auto' });
+        }
+
+        if (progress > 0.015) {
+          gsap.to(scrollIndicator, { opacity: 0, duration: 0.25, overwrite: 'auto' });
+        } else {
+          gsap.to(scrollIndicator, { opacity: 0.75, duration: 0.25, overwrite: 'auto' });
+        }
+
+        // 3. O container do vídeo permanece perfeitamente estável (y: 0, scale: 1) durante o Hero
+        gsap.set('.hero-bg-video-container', { y: 0, scale: 1, opacity: 1 });
+
+        // 4. Parallax antecipado no Mobile (<1025px): A próxima seção começa a subir antes de a animação terminar
+        if (window.innerWidth < 1025) {
+          if (progress > 0.72) {
+            const riseP = (progress - 0.72) / 0.28;
+            gsap.set('.post-hero-spacer, .post-hero-spacer ~ *', { y: -260 * riseP });
+          } else {
+            gsap.set('.post-hero-spacer, .post-hero-spacer ~ *', { y: 0 });
+          }
+        }
+      }
+
+      gsap.ticker.add((time, deltaTime) => {
+        const dt = Math.min(0.1, deltaTime / 1000);
+        // Limite máximo de avanço: no celular máx 42% por segundo (~2.4s de cadência mínima garantida), no desktop máx 45% (~2.2s)
+        const maxSpeed = window.innerWidth < 1025 ? 0.42 : 0.45;
+        const maxDelta = maxSpeed * dt;
+        
+        const diff = targetHeroProgress - currentHeroProgress;
+        if (Math.abs(diff) > 0.0001) {
+          const step = Math.sign(diff) * Math.min(Math.abs(diff) * (window.innerWidth < 1025 ? 10 * dt : 8 * dt), maxDelta);
+          currentHeroProgress += step;
+          updateHeroScene(currentHeroProgress);
+        }
+      });
+
+      // ScrollTrigger do Hero: Scrubbing ágil com repasse para o Motor de Cadência Máxima
       ScrollTrigger.create({
         trigger: '#heroPinArea',
         pin: true,
         start: 'top top',
         end: '+=190%',
-        scrub: window.innerWidth < 1025 ? 0.15 : 0.4, // No mobile (0.15) responde na hora ao toque do dedo
+        scrub: true,
         onUpdate: (self) => {
-          const progress = self.progress;
-
-          // 1. Scrub de quadros no canvas — zero delay de decodificação de vídeo
-          if (images.length > 0) {
-            const frameIndex = Math.min(images.length - 1, Math.floor(progress * images.length));
-            renderFrame(frameIndex);
-          }
-
-          // 2. Efeito de sumir os textos e botões
-          // No Desktop: só começam a sumir no quadro onde a caneta toca o papel e assina o Termo de Posse (quadro 160, progress 0.625)
-          // No Mobile: a copy some logo no início da rolagem (progress 0.10 a 0.26) para revelar o documento "Concurso Público" antes da transição para o "Termo de Posse"
-          let fadeProgress = 0;
-          if (window.innerWidth >= 1025) {
-            fadeProgress = progress <= 0.625 ? 0 : Math.min(1, (progress - 0.625) / 0.25);
-          } else {
-            fadeProgress = progress <= 0.10 ? 0 : Math.min(1, (progress - 0.10) / 0.16);
-          }
-          
-          gsap.to('.hero-content-box', {
-            opacity: 1 - fadeProgress,
-            y: -50 * fadeProgress,
-            scale: 1 - 0.03 * fadeProgress,
-            duration: 0.15,
-            overwrite: 'auto'
-          });
-
-          gsap.to('.navbar', {
-            opacity: 1 - fadeProgress * 1.3,
-            y: -25 * fadeProgress,
-            duration: 0.15,
-            overwrite: 'auto'
-          });
-
-          gsap.to('.hero-ambient-glow', {
-            opacity: 1 - fadeProgress,
-            scale: 1 + 0.15 * fadeProgress,
-            duration: 0.15,
-            overwrite: 'auto'
-          });
-
-          // No mobile (<900px), o overlay escuro some em sincronia com o sumiço da copy
-          if (window.innerWidth <= 900) {
-            gsap.to('.hero-bg-overlay', {
-              opacity: 0.94 * (1 - fadeProgress),
-              duration: 0.15,
-              overwrite: 'auto'
-            });
-          } else {
-            gsap.to('.hero-bg-overlay', { opacity: 0, duration: 0.15, overwrite: 'auto' });
-          }
-
-          if (progress > 0.015) {
-            gsap.to(scrollIndicator, { opacity: 0, duration: 0.25, overwrite: 'auto' });
-          } else {
-            gsap.to(scrollIndicator, { opacity: 0.75, duration: 0.25, overwrite: 'auto' });
-          }
-
-          // 3. O container do vídeo permanece perfeitamente estável (y: 0, scale: 1) durante o Hero
-          gsap.set('.hero-bg-video-container', { y: 0, scale: 1, opacity: 1 });
-
-          // 4. Parallax antecipado no Mobile (<1025px): A próxima seção começa a subir antes de a animação terminar
-          if (window.innerWidth < 1025) {
-            if (progress > 0.72) {
-              const riseP = (progress - 0.72) / 0.28;
-              gsap.set('.post-hero-spacer, .post-hero-spacer ~ *', { y: -260 * riseP });
-            } else {
-              gsap.set('.post-hero-spacer, .post-hero-spacer ~ *', { y: 0 });
-            }
-          }
+          targetHeroProgress = self.progress;
         }
       });
 
