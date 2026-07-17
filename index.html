@@ -131,17 +131,14 @@
         padding: 15px 30px !important;
         font-size: 15px !important;
       }
-      .friction-reducer {
-        font-size: 12px !important;
-        padding: 8px 16px !important;
-      }
       .hero-actions {
         gap: 12px !important;
         margin-top: 6px !important;
+        margin-bottom: 0px !important;
       }
       .hero-lawyer-badge {
         padding: 14px 20px !important;
-        margin-top: 10px !important;
+        margin-top: 4px !important;
       }
       .lawyer-name {
         font-size: 15px !important;
@@ -362,11 +359,13 @@
       border-radius: var(--rr-radius-pill);
       padding: 8px 16px;
       font-family: var(--rr-font-mono);
-      font-size: 11px;
-      letter-spacing: 0.18em;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--rr-orange);
     }
+
 
     .eyebrow-dot {
       width: 6px;
@@ -438,28 +437,6 @@
       margin-top: 6px;
     }
 
-    .friction-reducer {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--rr-font-mono);
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      color: #E2DBD2;
-      background: rgba(20, 15, 12, 0.65);
-      backdrop-filter: blur(10px);
-      padding: 8px 16px;
-      border-radius: var(--rr-radius-sm);
-      border: 1px solid rgba(255, 179, 71, 0.28);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    }
-
-    .friction-reducer svg {
-      width: 14px;
-      height: 14px;
-      fill: var(--rr-amber);
-      flex-shrink: 0;
-    }
 
     /* Redutor de Atrito / Microcopy */
     .hero-microcopy {
@@ -554,11 +531,20 @@
     }
 
     /* Bloco Detalhe Advogado / OAB */
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+      margin-top: 6px;
+      margin-bottom: 0px;
+    }
+
     .hero-lawyer-badge {
       display: flex;
       align-items: flex-start;
       gap: 16px;
-      margin-top: 12px;
+      margin-top: 6px;
       padding: 14px 20px;
       background: rgba(25, 19, 15, 0.82);
       backdrop-filter: blur(12px);
@@ -624,10 +610,11 @@
       .hero-actions {
         gap: 10px;
         margin-top: 2px;
+        margin-bottom: 0px;
       }
       .hero-lawyer-badge {
         padding: 10px 16px;
-        margin-top: 8px;
+        margin-top: 4px;
       }
       .scroll-indicator-wrap {
         bottom: 12px;
@@ -2585,14 +2572,6 @@
               <span aria-hidden="true">→</span>
             </a>
           </div>
-
-          <!-- Redutor de Atrito -->
-          <div class="friction-reducer" aria-label="Garantia de atendimento rápido e sem compromisso">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-            <span>Análise inicial do seu caso sem compromisso · Atendimento humanizado e rápido</span>
-          </div>
         </div>
 
         <!-- Detalhe Dr. Paulo Rinaldi + OAB/SC + Denominação -->
@@ -3722,11 +3701,12 @@
 
           // 2. Efeito de sumir os textos e botões
           // No Desktop: só começam a sumir no quadro onde a caneta toca o papel e assina o Termo de Posse (quadro 160, progress 0.625)
+          // No Mobile: a copy some logo no início da rolagem (progress 0.10 a 0.26) para revelar o documento "Concurso Público" antes da transição para o "Termo de Posse"
           let fadeProgress = 0;
           if (window.innerWidth >= 1025) {
             fadeProgress = progress <= 0.625 ? 0 : Math.min(1, (progress - 0.625) / 0.25);
           } else {
-            fadeProgress = Math.min(1, progress / 0.18);
+            fadeProgress = progress <= 0.10 ? 0 : Math.min(1, (progress - 0.10) / 0.16);
           }
           
           gsap.to('.hero-content-box', {
@@ -3770,6 +3750,16 @@
 
           // 3. O container do vídeo permanece perfeitamente estável (y: 0, scale: 1) durante o Hero
           gsap.set('.hero-bg-video-container', { y: 0, scale: 1, opacity: 1 });
+
+          // 4. Parallax antecipado no Mobile (<1025px): A próxima seção começa a subir antes de a animação terminar
+          if (window.innerWidth < 1025) {
+            if (progress > 0.72) {
+              const riseP = (progress - 0.72) / 0.28;
+              gsap.set('.post-hero-spacer, .post-hero-spacer ~ *', { y: -260 * riseP });
+            } else {
+              gsap.set('.post-hero-spacer, .post-hero-spacer ~ *', { y: 0 });
+            }
+          }
         }
       });
 
@@ -3934,5 +3924,6 @@
       }
     })();
   </script>
+
 </body>
 </html>
