@@ -90,70 +90,24 @@
     }
 
     @media (min-width: 1025px) {
-      /* Reduzir largura máxima dos containers principais para ficarem mais elegantes */
-      .navbar {
-        max-width: 1320px;
-        padding-top: 24px;
-        padding-bottom: 24px;
+      /* 1. Aplica escala global de 75% no desktop (como desejado pelo usuário em zoom 75%) */
+      html {
+        zoom: 0.75;
       }
-      .hero-container {
-        max-width: 1320px;
-        padding-top: 40px;
-        padding-bottom: 80px;
+      /* 2. Compensa a redução do zoom nos elementos fixados (ScrollTrigger pin e Film Grain) 
+            para que cubram 100% da largura e altura física da tela e evitem barras pretas/vazias */
+      .film-grain,
+      .pin-spacer,
+      #heroPinArea,
+      .hero-wrapper {
+        width: calc(100vw / 0.75) !important;
+        max-width: none !important;
       }
-      .about-container, .generic-container, .method-container, .faq-container, .cta-final-container {
-        max-width: 1080px;
-      }
-
-      /* Reduzir paddings das seções */
-      .generic-section, .about-section, .method-section, .faq-section, .cta-final-section {
-        padding: clamp(60px, 6vw, 100px) clamp(20px, 3vw, 30px);
-      }
-
-      /* Reduzir fontes e títulos */
-      .hero-headline {
-        font-size: clamp(32px, 3.8vw, 54px);
-      }
-      .hero-subtitle {
-        font-size: clamp(14px, 1.1vw, 16px);
-      }
-      .about-title, .generic-title, .cta-final-title {
-        font-size: clamp(24px, 2.5vw, 34px);
-      }
-      .about-desc, .pillar-card-light p, .faq-answer p {
-        font-size: 14px;
-        line-height: 1.5;
-      }
-
-      /* Reduzir tamanho dos cards */
-      .monumental-card {
-        min-height: 460px;
-      }
-      .monumental-content {
-        padding: clamp(24px, 3vw, 40px);
-        gap: 16px;
-      }
-      .pillar-card-light {
-        padding: clamp(20px, 2vw, 28px);
-        gap: 12px;
-      }
-
-      /* Reduzir tamanho dos botões */
-      .btn-primary {
-        padding: 12px 24px;
-        font-size: 14px;
-      }
-      
-      /* Reduzir gaps gerais */
-      .hero-content-box {
-        gap: 20px;
-      }
-      .hero-actions {
-        gap: 10px;
-      }
-      .hero-lawyer-badge {
-        padding: 10px 16px;
-        margin-top: 8px;
+      .film-grain,
+      #heroPinArea,
+      .hero-wrapper {
+        height: calc(100vh / 0.75) !important;
+        min-height: calc(100vh / 0.75) !important;
       }
     }
 
