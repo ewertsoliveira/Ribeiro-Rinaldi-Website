@@ -3559,18 +3559,20 @@
 
       // Configuração essencial para garantir que o Mobile não dê saltos (jump) de layout ao transicionar entre seções pinadas
       ScrollTrigger.config({ ignoreMobileResize: true });
-      ScrollTrigger.normalizeScroll(true);
+      if (window.innerWidth >= 1025) {
+        ScrollTrigger.normalizeScroll(true);
+      }
 
       /* --------------------------------------------------------------------------
-         A. LENIS SMOOTH SCROLL (Sensação Amanteigada da Apple - Sincronizada com Touch no Mobile)
+         A. LENIS SMOOTH SCROLL (Sensação Amanteigada no Desktop & Scroll Nativo Puro no Celular)
          -------------------------------------------------------------------------- */
       const lenis = new Lenis({
         duration: 1.15,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smoothWheel: true,
         wheelMultiplier: 1.0,
-        syncTouch: true,
-        touchMultiplier: 0.9 // Ajustado para 0.9x para um scroll móvel natural, macio e sem impulsos bruscos
+        syncTouch: false, // No Mobile: desativado para liberar o scroll nativo (Apple/Android) a 120Hz/60Hz puros, sem travamentos
+        touchMultiplier: 1.0
       });
 
       lenis.on('scroll', ScrollTrigger.update);
@@ -3689,7 +3691,7 @@
         pin: true,
         start: 'top top',
         end: '+=190%',
-        scrub: 0.4,
+        scrub: window.innerWidth < 1025 ? 0.15 : 0.4, // No mobile (0.15) responde na hora ao toque do dedo
         onUpdate: (self) => {
           const progress = self.progress;
 
@@ -3768,7 +3770,7 @@
         trigger: '.post-hero-spacer',
         start: 'top bottom',
         end: 'bottom top',
-        scrub: 0.4,
+        scrub: window.innerWidth < 1025 ? 0.15 : 0.4,
         onUpdate: (self) => {
           gsap.set('.hero-bg-video-container', { y: 0, scale: 1, opacity: 1 });
         }
