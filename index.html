@@ -2970,10 +2970,10 @@
           <div class="monumental-content">
             <div class="eyebrow-pill">
               <span class="eyebrow-dot"></span>
-              <span>Advogado e Servidor Público do Estado de Santa Catarina</span>
+              <span>Advogado e Servidor Público</span>
             </div>
             <h2 class="about-title">
-              Por que ter sido do outro lado da prova muda tudo no seu recurso.
+              O seu recurso nas mãos de quem já passou na prova e conhece os bastidores.
             </h2>
             <p class="about-desc">
               A maioria dos advogados conhece apenas a teoria jurídica dos livros. O <strong>Dr. Paulo Rinaldi</strong> vivenciou a maratona de estudos e a aprovação em concursos de alta exigência como <strong>Auditor do Estado de Santa Catarina</strong> — e hoje alia esse conhecimento dos bastidores da Administração Pública à advocacia estratégica de alta performance.
@@ -3041,10 +3041,10 @@
           <div class="monumental-content monumental-content--mobile">
             <div class="eyebrow-pill">
               <span class="eyebrow-dot"></span>
-              <span>Advogado e Servidor Público do Estado de Santa Catarina</span>
+              <span>Advogado e Servidor Público</span>
             </div>
             <h2 class="about-title">
-              Por que ter sido do outro lado da prova muda tudo no seu recurso.
+              O seu recurso nas mãos de quem já passou na prova e conhece os bastidores.
             </h2>
 
             <!-- Foto do Dr. Paulo dentro do Quadro da Opção 2, entre Headline e Texto, com fade inferior para var(--rr-panel) -->
@@ -3591,7 +3591,7 @@
         smoothWheel: true,
         wheelMultiplier: 1.0,
         syncTouch: true,
-        touchMultiplier: 1.8
+        touchMultiplier: 0.9 // Ajustado para 0.9x para um scroll móvel natural, macio e sem impulsos bruscos
       });
 
       lenis.on('scroll', ScrollTrigger.update);
@@ -3720,8 +3720,14 @@
             renderFrame(frameIndex);
           }
 
-          // 2. Efeito de sumir os textos e botões ao iniciar o scroll (de progress 0.0 até 0.18)
-          const fadeProgress = Math.min(1, progress / 0.18);
+          // 2. Efeito de sumir os textos e botões
+          // No Desktop: só começam a sumir no quadro onde a caneta toca o papel e assina o Termo de Posse (quadro 160, progress 0.625)
+          let fadeProgress = 0;
+          if (window.innerWidth >= 1025) {
+            fadeProgress = progress <= 0.625 ? 0 : Math.min(1, (progress - 0.625) / 0.25);
+          } else {
+            fadeProgress = Math.min(1, progress / 0.18);
+          }
           
           gsap.to('.hero-content-box', {
             opacity: 1 - fadeProgress,
@@ -3762,37 +3768,19 @@
             gsap.to(scrollIndicator, { opacity: 0.75, duration: 0.25, overwrite: 'auto' });
           }
 
-          // 3. PARALLAX ANTECIPADO DO VÍDEO: Começa a transformar ANTES de terminar os quadros (a partir dos 72% de progress)
-          if (progress > 0.72) {
-            const earlyP = (progress - 0.72) / 0.28; // 0.0 até 1.0 nos últimos 28% da animação
-            gsap.to('.hero-bg-video-container', {
-              y: earlyP * 180,
-              scale: 1 - (earlyP * 0.06),
-              opacity: 1 - (earlyP * 0.4),
-              duration: 0.1,
-              overwrite: 'auto'
-            });
-          } else {
-            gsap.to('.hero-bg-video-container', { y: 0, scale: 1, opacity: 1, duration: 0.1, overwrite: 'auto' });
-          }
+          // 3. O container do vídeo permanece perfeitamente estável (y: 0, scale: 1) durante o Hero
+          gsap.set('.hero-bg-video-container', { y: 0, scale: 1, opacity: 1 });
         }
       });
 
-      // Parallax Dinâmico e Intenso: Continua transformando o vídeo quando a seção seguinte entra em cena no scroll normal
+      // Parallax Dinâmico e Contínuo: Sincronizado perfeitamente com o término da Hero
       ScrollTrigger.create({
         trigger: '.post-hero-spacer',
         start: 'top bottom',
         end: 'bottom top',
-        scrub: true,
+        scrub: 0.4,
         onUpdate: (self) => {
-          const p = self.progress;
-          gsap.to('.hero-bg-video-container', {
-            y: 180 + (p * 240),
-            scale: Math.max(0.85, 0.94 - (p * 0.08)),
-            opacity: Math.max(0, 0.6 - (p * 0.6)),
-            duration: 0.1,
-            overwrite: 'auto'
-          });
+          gsap.set('.hero-bg-video-container', { y: 0, scale: 1, opacity: 1 });
         }
       });
 
