@@ -109,6 +109,11 @@
         height: calc(100vh / 0.75) !important;
         min-height: calc(100vh / 0.75) !important;
       }
+      /* 3. Limita a largura máxima da caixa de conteúdo do Hero para forçar as quebras de linha ideais 
+            ("SEU NOME NA" / "LISTA" e "SUA VAGA NA" / "MÃO") exatamente como no print de referência */
+      .hero-content-box {
+        max-width: 520px;
+      }
     }
 
     /* Foco de Acessibilidade */
